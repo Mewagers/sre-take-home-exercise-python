@@ -1,6 +1,7 @@
 import yaml
 import requests
 import time
+from pynput import keyboard
 from collections import defaultdict
 
 # Function to load configuration from the YAML file
@@ -11,9 +12,9 @@ def load_config(file_path):
 # Function to perform health checks
 def check_health(endpoint):
     url = endpoint['url']
-    method = endpoint.get('method')
-    headers = endpoint.get('headers')
-    body = endpoint.get('body')
+    method = endpoint.get('method', 'GET')
+    headers = endpoint.get('headers', {})
+    body = endpoint.get('body', None)
 
     try:
         response = requests.request(method, url, headers=headers, json=body)
@@ -40,11 +41,18 @@ def monitor_endpoints(file_path):
 
         # Log cumulative availability percentages
         for domain, stats in domain_stats.items():
-            availability = round(100 * stats["up"] / stats["total"])
+            # Should prevent dividing by zero
+            if stats["total"] == 0:
+                availability = 0
+            else:
+                availability = round(100 * stats["up"] / stats["total"])
             print(f"{domain} has {availability}% availability percentage")
 
         print("---")
         time.sleep(15)
+        
+        
+
 
 # Entry point of the program
 if __name__ == "__main__":
